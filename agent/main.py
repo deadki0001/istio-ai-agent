@@ -16,7 +16,7 @@ ERROR_THRESHOLD   = float(os.environ.get("ERROR_RATE_THRESHOLD", "0.05"))
 LATENCY_THRESHOLD = float(os.environ.get("LATENCY_THRESHOLD_MS", "500"))
 SPIFFE_ID         = "spiffe://cluster.local/ns/ai-agent/sa/ai-agent"
 
-def check_thresholds(telemetry: dict) -> bool:
+def check_thresholds(telemetry):
     for svc, metrics in telemetry.get("services", {}).items():
         if (metrics.get("error_rate") or 0) > ERROR_THRESHOLD:
             logger.warning(f"[THRESHOLD BREACH] {svc} error_rate={metrics['error_rate']:.3f}")
@@ -25,6 +25,50 @@ def check_thresholds(telemetry: dict) -> bool:
             logger.warning(f"[THRESHOLD BREACH] {svc} p99={metrics['p99_ms']:.1f}ms")
             return True
     return False
+
+def print_report(d):
+    sev = str(d.get("severity", "unknown")).upper()
+    detected = "YES - ISSUE DETECTED" if d.get("issue_detected") else "NO ISSUE"
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    lines = [
+        "",
+        "=" * 70,
+        "  AI DIAGNOSTIC AGENT - INTERN TIER REPORT",
+        "=" * 70,
+        f"  Timestamp : {ts}",
+        f"  Identity  : {SPIFFE_ID}",
+        "-" * 70,
+        f"  STATUS    : {detected}",
+        f"  SEVERITY  : {sev}",
+        "-" * 70,
+        "  SUMMARY",
+        f"  {d.get('summary', 'N/A')}",
+        "-" * 70,
+        "  ROOT CAUSE",
+    ]
+    for line in (d.get("root_cause") or "N/A").split(". "):
+        if line:
+            lines.append(f"  {line.strip()}.")
+    lines += [
+        "-" * 70,
+        "  PROPOSAL ONLY - requires human approval before execution",
+    ]
+    for line in (d.get("proposal") or "N/A").split("\n"):
+        if line.strip():
+            lines.append(f"  {line.strip()}")
+    lines += [
+        "-" * 70,
+        "  CANNOT DO (authorization scope boundary)",
+        f"  {d.get('cannot_do', 'N/A')}",
+        "-" * 70,
+        "  REQUIRES APPROVAL FROM",
+        f"  {d.get('requires_approval_from', 'N/A')}",
+        "=" * 70,
+        "",
+    ]
+    for line in lines:
+        logger.info(line)
 
 def run():
     logger.info("AI Diagnostic Agent - Intern Tier - starting")
@@ -35,7 +79,7 @@ def run():
 
     while True:
         try:
-            logger.info("Collecting telemetry...")
+            logger.info("Collecting telemetry snapshot...")
             telemetry = collect_telemetry()
 
             for svc, m in telemetry.get("services", {}).items():
@@ -46,20 +90,9 @@ def run():
                 )
 
             if check_thresholds(telemetry):
-                logger.info("Requesting Claude diagnosis...")
+                logger.info("Thresholds exceeded - requesting Claude diagnosis...")
                 d = diagnose(telemetry)
-                logger.info("=" * 60)
-                logger.info("AGENT DIAGNOSIS REPORT")
-                logger.info(f"Timestamp          : {datetime.now(timezone.utc).isoformat()}")
-                logger.info(f"Agent identity     : {SPIFFE_ID}")
-                logger.info(f"Issue detected     : {d.get('issue_detected')}")
-                logger.info(f"Severity           : {str(d.get('severity','')).upper()}")
-                logger.info(f"Summary            : {d.get('summary', 'N/A')}")
-                logger.info(f"Root cause         : {d.get('root_cause', 'N/A')}")
-                logger.info(f"PROPOSAL ONLY      : {d.get('proposal', 'N/A')}")
-                logger.info(f"CANNOT DO          : {d.get('cannot_do', 'N/A')}")
-                logger.info(f"Approve/execute    : {d.get('requires_approval_from', 'N/A')}")
-                logger.info("=" * 60)
+                print_report(d)
             else:
                 logger.info("All metrics within thresholds")
 
