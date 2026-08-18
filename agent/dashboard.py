@@ -120,7 +120,9 @@ def index():
         ts = d["timestamp"]
         pitems = ""
         num = 1
-        for line in (diag.get("proposal") or "").split("\n"):
+        prop = diag.get("proposal") or ""
+if isinstance(prop, list): prop = "\n".join(str(x) for x in prop)
+        for line in prop.split("\n"):
             line = re.sub(r"^\d+\.\s*","",line.strip())
             if line:
                 pitems += f'''<li class="pitem"><span class="pnum">{num}</span><span>{w(line,84)}</span></li>'''
