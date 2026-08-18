@@ -22,7 +22,7 @@ spec:
       serviceAccountName: ai-agent
       containers:
       - name: ai-agent
-        image: AGENT_IMAGE
+        image: 988176743547.dkr.ecr.us-east-2.amazonaws.com/istio-ai-agent:sha-0d04e4adb22718bc1d73f451d8e3325e254858d7
         env:
         - name: ANTHROPIC_API_KEY
           valueFrom:
