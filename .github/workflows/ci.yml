@@ -48,10 +48,10 @@ jobs:
 
       - name: Update deployment image tag
         run: |
-          sed -i "s|AGENT_IMAGE|${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}|" \
+          sed -i "s|image:.*istio-ai-agent.*|image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}|" \
             k8s/deployment.yaml
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add k8s/deployment.yaml
-          git commit -m "ci: update agent image to sha-${{ github.sha }}"
-          git push
+          git diff --cached --quiet || git commit -m "ci: update agent image to sha-${{ github.sha }}"
+          git push || true
