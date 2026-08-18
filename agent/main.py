@@ -1,14 +1,13 @@
 import logging
 import os
 import time
+import threading
 from datetime import datetime, timezone
 from telemetry import collect_telemetry
 from claude_client import diagnose
+import dashboard
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s")
 logger = logging.getLogger("ai-agent")
 
 POLL_INTERVAL     = int(os.environ.get("POLL_INTERVAL_SECONDS", "30"))
@@ -26,79 +25,37 @@ def check_thresholds(telemetry):
             return True
     return False
 
-def print_report(d):
-    sev = str(d.get("severity", "unknown")).upper()
-    detected = "YES - ISSUE DETECTED" if d.get("issue_detected") else "NO ISSUE"
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-
-    lines = [
-        "",
-        "=" * 70,
-        "  AI DIAGNOSTIC AGENT - INTERN TIER REPORT",
-        "=" * 70,
-        f"  Timestamp : {ts}",
-        f"  Identity  : {SPIFFE_ID}",
-        "-" * 70,
-        f"  STATUS    : {detected}",
-        f"  SEVERITY  : {sev}",
-        "-" * 70,
-        "  SUMMARY",
-        f"  {d.get('summary', 'N/A')}",
-        "-" * 70,
-        "  ROOT CAUSE",
-    ]
-    for line in (d.get("root_cause") or "N/A").split(". "):
-        if line:
-            lines.append(f"  {line.strip()}.")
-    lines += [
-        "-" * 70,
-        "  PROPOSAL ONLY - requires human approval before execution",
-    ]
-    for line in (d.get("proposal") or "N/A").split("\n"):
-        if line.strip():
-            lines.append(f"  {line.strip()}")
-    lines += [
-        "-" * 70,
-        "  CANNOT DO (authorization scope boundary)",
-        f"  {d.get('cannot_do', 'N/A')}",
-        "-" * 70,
-        "  REQUIRES APPROVAL FROM",
-        f"  {d.get('requires_approval_from', 'N/A')}",
-        "=" * 70,
-        "",
-    ]
-    for line in lines:
-        logger.info(line)
-
 def run():
     logger.info("AI Diagnostic Agent - Intern Tier - starting")
     logger.info(f"SPIFFE identity  : {SPIFFE_ID}")
     logger.info(f"Auth scope       : READ-ONLY - Prometheus, Jaeger, Kiali (istio-system)")
     logger.info(f"Denied           : Direct calls to lsd-payments (AuthorizationPolicy DENY)")
     logger.info(f"Poll interval    : {POLL_INTERVAL}s")
+    logger.info(f"Dashboard        : http://0.0.0.0:5000")
+
+    t = threading.Thread(target=dashboard.start, kwargs={"port": 5000}, daemon=True)
+    t.start()
 
     while True:
         try:
             logger.info("Collecting telemetry snapshot...")
             telemetry = collect_telemetry()
-
             for svc, m in telemetry.get("services", {}).items():
-                logger.info(
-                    f"[METRIC] {svc} | "
-                    f"error_rate={m.get('error_rate', 'N/A')} | "
-                    f"p99={m.get('p99_ms', 'N/A')}ms"
-                )
-
+                logger.info(f"[METRIC] {svc} | error_rate={m.get('error_rate', 'N/A')} | p99={m.get('p99_ms', 'N/A')}ms")
+            dashboard.update_metrics(telemetry.get("services", {}))
             if check_thresholds(telemetry):
                 logger.info("Thresholds exceeded - requesting Claude diagnosis...")
                 d = diagnose(telemetry)
-                print_report(d)
+                dashboard.update_diagnosis(d, telemetry.get("services", {}))
+                logger.info(f"[DIAGNOSIS] severity={d.get('severity','?').upper()} | {d.get('summary','')[:120]}")
+                logger.info(f"[CANNOT DO] {d.get('cannot_do','')[:120]}")
+                logger.info(f"[APPROVAL]  {d.get('requires_approval_from','')}")
+                logger.info("Dashboard updated - open http://localhost:5000")
             else:
                 logger.info("All metrics within thresholds")
-
+                dashboard.clear_alert()
         except Exception as e:
             logger.error(f"Agent loop error: {e}", exc_info=True)
-
         time.sleep(POLL_INTERVAL)
 
 if __name__ == "__main__":
