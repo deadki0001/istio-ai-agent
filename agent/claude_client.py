@@ -34,9 +34,18 @@ def diagnose(telemetry: dict) -> dict:
             }]
         )
         raw = message.content[0].text
+        logger.info(f"Claude raw response: {raw[:500]}")
+        # Strip markdown code blocks if present
+        cleaned = raw.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("```")[1]
+            if cleaned.startswith("json"):
+                cleaned = cleaned[4:]
+        cleaned = cleaned.strip()
         try:
-            return json.loads(raw)
-        except json.JSONDecodeError:
+            return json.loads(cleaned)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error: {e}, raw: {raw[:200]}")
             return {"raw_response": raw, "parse_error": True}
     except Exception as e:
         logger.error(f"Claude API call failed: {e}")
