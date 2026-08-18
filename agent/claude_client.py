@@ -36,11 +36,11 @@ def diagnose(telemetry: dict) -> dict:
         raw = message.content[0].text
         logger.info(f"Claude raw response: {raw[:500]}")
         # Strip markdown code blocks if present
+        import re
         cleaned = raw.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("```")[1]
-            if cleaned.startswith("json"):
-                cleaned = cleaned[4:]
+        # Remove markdown code fences
+        cleaned = re.sub(r'^```(?:json)?\s*', '', cleaned)
+        cleaned = re.sub(r'\s*```$', '', cleaned)
         cleaned = cleaned.strip()
         try:
             return json.loads(cleaned)
