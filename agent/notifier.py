@@ -61,3 +61,30 @@ def notify(diagnosis, metrics):
         return
     _discord(diagnosis, metrics)
     _slack(diagnosis, metrics)
+
+
+def notify_escalation(diagnosis, metrics):
+    """Fire escalation notification - human approved the proposal."""
+    if not DISCORD_URL:
+        return
+    sev = str(diagnosis.get("severity","unknown")).lower()
+    payload = {
+        "username": "NEXUS",
+        "embeds": [{
+            "title": ":white_check_mark: ESCALATION APPROVED - Senior Agent Requested",
+            "description": f"A human operator has approved escalation for the following issue:\n\n**{diagnosis.get('summary','')}**",
+            "color": 0x10b981,
+            "fields": [
+                {"name": "Severity", "value": sev.upper()},
+                {"name": "Approved Proposal", "value": (str(diagnosis.get("proposal","")) or "N/A")[:800]},
+                {"name": "Authorized By", "value": diagnosis.get("requires_approval_from","N/A")},
+                {"name": "Status", "value": "Senior Agent executing remediation..."},
+            ],
+            "footer": {"text": "NEXUS - Human-approved escalation - Intern tier -> Senior tier handoff"}
+        }]
+    }
+    try:
+        r = requests.post(DISCORD_URL, json=payload, timeout=10)
+        log.info(f"Escalation Discord: {r.status_code}")
+    except Exception as e:
+        log.error(f"Escalation Discord error: {e}")
