@@ -88,3 +88,29 @@ def notify_escalation(diagnosis, metrics):
         log.info(f"Escalation Discord: {r.status_code}")
     except Exception as e:
         log.error(f"Escalation Discord error: {e}")
+
+
+def notify_auto_remediate(diagnosis, metrics):
+    """NEXUS Senior Agent auto-remediation notification."""
+    if not DISCORD_URL:
+        return
+    payload = {
+        "username": "NEXUS Senior Agent",
+        "embeds": [{
+            "title": ":robot: NEXUS SENIOR AGENT - Auto-Remediation Initiated",
+            "description": f"Automated remediation executing for:\n\n**{diagnosis.get('summary','')}**",
+            "color": 0x3b82f6,
+            "fields": [
+                {"name": "Severity", "value": str(diagnosis.get("severity","")).upper()},
+                {"name": "Action", "value": "Senior Agent executing: kubectl rollout restart deployment/lsd-backend -n lsd-payments"},
+                {"name": "Authorization", "value": "Operator-approved via NEXUS dashboard"},
+                {"name": "Status", "value": ":arrows_counterclockwise: Remediation in progress..."},
+            ],
+            "footer": {"text": "NEXUS Senior Agent - Auto-remediation - Operator approved"}
+        }]
+    }
+    try:
+        r = requests.post(DISCORD_URL, json=payload, timeout=10)
+        log.info(f"Auto-remediate Discord: {r.status_code}")
+    except Exception as e:
+        log.error(f"Auto-remediate Discord error: {e}")

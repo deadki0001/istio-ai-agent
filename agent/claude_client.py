@@ -42,6 +42,7 @@ def diagnose(telemetry: dict) -> dict:
         cleaned = re.sub(r'^```(?:json)?\s*', '', cleaned)
         cleaned = re.sub(r'\s*```$', '', cleaned)
         cleaned = cleaned.strip()
+        cleaned = cleaned.replace("\u2014", "-").replace("\u2013", "-").replace("\u2015", "-")
         try:
             return json.loads(cleaned)
         except json.JSONDecodeError as e:

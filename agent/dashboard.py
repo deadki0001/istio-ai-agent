@@ -133,6 +133,18 @@ def index():
     return f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta http-equiv="refresh" content="15"><title>NEXUS - Mesh Intelligence Hub</title><style>{CSS}</style></head><body><div class="topbar"><div class="brand"><pre class="brand-ascii"> _  _ _____  ___  _   _  ___\n| \\| || __\\ \\/ / || | | |/ __|\n| .` || _|  >  < | |_| |\\__ \\\n|_|\\_||___/_/\\_\\\\___/ _\\___|</pre><div class="brand-meta"><div class="brand-name">NEXUS</div><div class="brand-sub">Mesh Intelligence Hub - Istio Service Mesh - Intern Tier</div></div></div><div class="status-pill {scls}"><div class="status-dot"></div><span>{status}</span></div></div><div class="id-strip"><div class="id-item"><span class="id-lbl">SPIFFE</span><span class="id-val">spiffe://cluster.local/ns/ai-agent/sa/ai-agent</span></div><div class="id-item"><span class="id-lbl">Scope</span><span class="id-val scope">READ-ONLY - Prometheus - Jaeger - Kiali</span></div><div class="id-item"><span class="id-lbl">Denied</span><span class="id-val denied">lsd-payments direct calls (AuthorizationPolicy)</span></div><div class="id-item"><span class="id-lbl">Updated</span><span class="id-val">{last_updated}</span></div></div><div class="main"><div class="sidebar"><div class="sb-sec"><div class="sb-lbl">Live Telemetry</div>{mrows}</div></div><div class="content">{body}</div></div><div class="footer"><div class="fl"><span>Claude API - claude-sonnet-4-6</span><span>Proposals require human approval</span><span>Never auto-executed</span></div><div class="fr">Auto-refresh 15s</div></div></body></html>"""
 
 
+@app.route("/auto-remediate", methods=["POST"])
+def auto_remediate():
+    import notifier
+    with _lock:
+        d = state.get("diagnosis")
+    if d:
+        notifier.notify_auto_remediate(d["diagnosis"], d["metrics"])
+        with _lock:
+            state["status"] = "REMEDIATING"
+    return redirect("/")
+
+
 @app.route("/approve", methods=["POST"])
 def approve():
     import notifier
