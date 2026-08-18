@@ -1,0 +1,17 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: HTTPChaos
+metadata:
+  name: backend-error-fault
+  namespace: lsd-payments
+spec:
+  mode: all
+  selector:
+    namespaces:
+    - lsd-payments
+    labelSelectors:
+      app: lsd-backend
+  target: Response
+  port: 3000
+  path: "/api/payments"
+  abort: true
+  duration: "5m"

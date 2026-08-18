@@ -1,0 +1,18 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: backend-latency-fault
+  namespace: lsd-payments
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+    - lsd-payments
+    labelSelectors:
+      app: lsd-backend
+  delay:
+    latency: "800ms"
+    correlation: "100"
+    jitter: "50ms"
+  duration: "5m"

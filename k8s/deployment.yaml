@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-agent
+  namespace: ai-agent
+  labels:
+    app: ai-agent
+    tier: intern
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-agent
+  template:
+    metadata:
+      labels:
+        app: ai-agent
+        tier: intern
+        version: v1
+    spec:
+      serviceAccountName: ai-agent
+      containers:
+      - name: ai-agent
+        image: AGENT_IMAGE
+        env:
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-agent-secrets
+              key: anthropic-api-key
+        - name: POLL_INTERVAL_SECONDS
+          value: "30"
+        - name: ERROR_RATE_THRESHOLD
+          value: "0.05"
+        - name: LATENCY_THRESHOLD_MS
+          value: "500"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true

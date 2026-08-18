@@ -1,0 +1,57 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-2
+  ECR_REGISTRY: 988176743547.dkr.ecr.us-east-2.amazonaws.com
+  IMAGE_NAME: istio-ai-agent
+
+jobs:
+  build:
+    name: Build, Scan and Push
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+
+      - name: Build image
+        run: |
+          docker build -t ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }} ./agent
+
+      - name: Trivy scan
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image \
+            --exit-code 0 --severity HIGH,CRITICAL \
+            ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+
+      - name: Push to ECR
+        run: |
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+
+      - name: Update deployment image tag
+        run: |
+          sed -i "s|AGENT_IMAGE|${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}|" \
+            k8s/deployment.yaml
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add k8s/deployment.yaml
+          git commit -m "ci: update agent image to sha-${{ github.sha }}"
+          git push
