@@ -29,12 +29,12 @@ def w(text, width=88):
 CSS = """
 :root{--bg:#080c14;--surface:#0d1320;--surface2:#111827;--border:#1e2d42;--border2:#253448;--text:#e2e8f0;--muted:#64748b;--accent:#3b82f6;--green:#10b981;--red:#ef4444;--orange:#f97316;--mono:'Courier New',monospace;--sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;font-size:14px;line-height:1.5}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;font-size:15px;line-height:1.6;font-weight:400}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;border-bottom:1px solid var(--border);background:var(--surface)}
 .brand{display:flex;align-items:center;gap:12px}
-.brand-ascii{font-family:var(--mono);font-size:9px;line-height:1.15;color:var(--accent);white-space:pre;letter-spacing:0}
+.brand-ascii{font-family:var(--mono);font-size:11px;line-height:1.2;color:var(--accent);white-space:pre;letter-spacing:0;font-weight:600}
 .brand-meta{border-left:1px solid var(--border2);padding-left:12px}
-.brand-name{font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:0.14em;color:var(--text)}
+.brand-name{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:0.14em;color:var(--text)}
 .brand-sub{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.06em;margin-top:2px}
 .status-pill{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:0.08em;padding:5px 14px;border-radius:4px;border:1px solid}
 .status-dot{width:7px;height:7px;border-radius:50%;animation:blink 1.5s ease-in-out infinite}
@@ -48,7 +48,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .id-strip{display:flex;align-items:center;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto}
 .id-item{display:flex;align-items:center;gap:8px;padding:9px 20px;border-right:1px solid var(--border);white-space:nowrap}
 .id-lbl{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)}
-.id-val{font-family:var(--mono);font-size:11px;color:#60a5fa}
+.id-val{font-family:var(--mono);font-size:12px;color:#60a5fa;font-weight:500}
 .id-val.denied{color:#f87171}.id-val.scope{color:#34d399}
 .main{display:grid;grid-template-columns:270px 1fr;min-height:calc(100vh - 110px)}
 .sidebar{border-right:1px solid var(--border);background:var(--surface)}
@@ -57,9 +57,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .sb-lbl::after{content:'';flex:1;height:1px;background:var(--border)}
 .mrow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
 .mrow:last-child{border-bottom:none}
-.msvc{font-family:var(--mono);font-size:12px;color:var(--text);font-weight:500}
+.msvc{font-family:var(--mono);font-size:13px;color:var(--text);font-weight:600}
 .mvals{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
-.mval{font-family:var(--mono);font-size:11px;display:flex;align-items:center;gap:5px}
+.mval{font-family:var(--mono);font-size:12px;display:flex;align-items:center;gap:5px}
 .mk{font-size:9px;color:var(--muted);letter-spacing:0.05em}
 .ok{color:var(--green)}.warn{color:var(--red)}.na{color:var(--muted)}
 .content{background:var(--bg);padding:24px}
