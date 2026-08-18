@@ -121,7 +121,7 @@ def index():
         pitems = ""
         num = 1
         prop = diag.get("proposal") or ""
-if isinstance(prop, list): prop = "\n".join(str(x) for x in prop)
+        if isinstance(prop, list): prop = "\n".join(str(x) for x in prop)
         for line in prop.split("\n"):
             line = re.sub(r"^\d+\.\s*","",line.strip())
             if line:
