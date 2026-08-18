@@ -32,7 +32,7 @@ def get_p99_latency(service: str, namespace: str = "lsd-payments") -> dict:
 def get_recent_traces(service: str = "lsd-backend.lsd-payments", limit: int = 5) -> list:
     try:
         r = requests.get(
-            f"{JAEGER_URL}/api/traces",
+            f"{JAEGER_URL}/jaeger/api/traces",
             params={"service": service, "limit": limit, "lookback": "5m"},
             timeout=5
         )
@@ -52,14 +52,15 @@ def get_recent_traces(service: str = "lsd-backend.lsd-payments", limit: int = 5)
 def get_namespace_health() -> dict:
     try:
         r = requests.get(
-            f"{KIALI_URL}/kiali/api/namespaces/lsd-payments/health",
-            params={"rateInterval": "5m"},
+            f"{KIALI_URL}/kiali/api/namespaces",
             timeout=5
         )
         r.raise_for_status()
-        return r.json()
+        namespaces = r.json()
+        lsd = next((n for n in namespaces if n["name"] == "lsd-payments"), {})
+        return {"namespace": "lsd-payments", "found": bool(lsd), "labels": lsd.get("labels", {})}
     except Exception as e:
-        logger.error(f"Kiali health query failed: {e}")
+        logger.error(f"Kiali namespace query failed: {e}")
         return {"error": str(e)}
 
 def collect_telemetry(services: list = None) -> dict:
