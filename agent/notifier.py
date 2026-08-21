@@ -61,6 +61,7 @@ def notify(diagnosis, metrics):
         return
     _discord(diagnosis, metrics)
     _slack(diagnosis, metrics)
+    notify_grafana_irm(diagnosis, metrics)
 
 
 def notify_escalation(diagnosis, metrics):
@@ -114,3 +115,28 @@ def notify_auto_remediate(diagnosis, metrics):
         log.info(f"Auto-remediate Discord: {r.status_code}")
     except Exception as e:
         log.error(f"Auto-remediate Discord error: {e}")
+
+
+GRAFANA_IRM_URL = os.environ.get("GRAFANA_IRM_WEBHOOK_URL", "")
+
+def notify_grafana_irm(diagnosis: dict, metrics: dict):
+    """Send alert to Grafana IRM - triggers on-call, SMS and phone call."""
+    if not GRAFANA_IRM_URL:
+        return
+    sev = str(diagnosis.get("severity", "unknown")).lower()
+    payload = {
+        "title": f"NEXUS ALERT - {sev.upper()} - {diagnosis.get('summary','')[:100]}",
+        "message": diagnosis.get("root_cause", "")[:500],
+        "state": "alerting",
+        "tags": {
+            "severity": sev,
+            "service": "lsd-backend",
+            "agent": "nexus-intern-tier",
+            "spiffe": "spiffe://cluster.local/ns/ai-agent/sa/ai-agent"
+        }
+    }
+    try:
+        r = requests.post(GRAFANA_IRM_URL, json=payload, timeout=10)
+        log.info(f"Grafana IRM: {r.status_code}")
+    except Exception as e:
+        log.error(f"Grafana IRM error: {e}")
