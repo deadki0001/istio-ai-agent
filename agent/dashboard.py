@@ -24,6 +24,7 @@ def clear_alert():
 
 def w(text, width=88):
     if not text: return ""
+    if isinstance(text, list): text = "\n".join(str(x) for x in text)
     return "\n".join(textwrap.fill(p, width) for p in text.split("\n") if p.strip())
 
 CSS = """
