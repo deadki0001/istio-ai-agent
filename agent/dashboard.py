@@ -158,8 +158,6 @@ def auto_remediate():
                 "-n", "lsd-payments"
             ], timeout=30, capture_output=True)
             log.info("Auto-remediation: chaos faults deleted")
-            subprocess.run(["kubectl", "rollout", "restart", "deployment/lsd-backend", "-n", "lsd-payments"], timeout=30, capture_output=True)
-            log.info("Auto-remediation: lsd-backend restarted")
         except Exception as e:
             log.error(f"Auto-remediation kubectl failed: {e}")
     return redirect("/")
