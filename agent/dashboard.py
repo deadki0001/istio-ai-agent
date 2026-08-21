@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, redirect
 from datetime import datetime, timezone
 import threading, logging, textwrap, re
 
