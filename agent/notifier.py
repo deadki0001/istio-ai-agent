@@ -98,16 +98,16 @@ def notify_auto_remediate(diagnosis, metrics):
     payload = {
         "username": "NEXUS Senior Agent",
         "embeds": [{
-            "title": ":robot: NEXUS SENIOR AGENT - Auto-Remediation Initiated",
+            "title": ":robot: NEXUS AI AGENT - Auto-Remediation Executed",
             "description": f"Automated remediation executing for:\n\n**{diagnosis.get('summary','')}**",
             "color": 0x3b82f6,
             "fields": [
                 {"name": "Severity", "value": str(diagnosis.get("severity","")).upper()},
-                {"name": "Action", "value": "Senior Agent executing: kubectl rollout restart deployment/lsd-backend -n lsd-payments"},
+                {"name": "name": "Action", "value": "NEXUS AI deleted Chaos Mesh fault injection - service restoring to normal"},
                 {"name": "Authorization", "value": "Operator-approved via NEXUS dashboard"},
-                {"name": "Status", "value": ":arrows_counterclockwise: Remediation in progress..."},
+                {"name": "name": "Status", "value": ":white_check_mark: Chaos fault deleted - error rate should return to 0 within 60 seconds"},
             ],
-            "footer": {"text": "NEXUS Senior Agent - Auto-remediation - Operator approved"}
+            "footer": {"text": "NEXUS AI Agent - Auto-remediation - Chaos fault deleted - Intern tier autonomous action"}
         }]
     }
     try:
