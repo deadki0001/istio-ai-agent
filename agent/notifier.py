@@ -103,9 +103,9 @@ def notify_auto_remediate(diagnosis, metrics):
             "color": 0x3b82f6,
             "fields": [
                 {"name": "Severity", "value": str(diagnosis.get("severity","")).upper()},
-                {"name": "name": "Action", "value": "NEXUS AI deleted Chaos Mesh fault injection - service restoring to normal"},
+                {"name": "Action", "value": "NEXUS AI deleted Chaos Mesh fault injection - service restoring to normal"},
                 {"name": "Authorization", "value": "Operator-approved via NEXUS dashboard"},
-                {"name": "name": "Status", "value": ":white_check_mark: Chaos fault deleted - error rate should return to 0 within 60 seconds"},
+                {"name": "Status", "value": ":white_check_mark: Chaos fault deleted - error rate should return to 0 within 60 seconds"},
             ],
             "footer": {"text": "NEXUS AI Agent - Auto-remediation - Chaos fault deleted - Intern tier autonomous action"}
         }]
