@@ -136,13 +136,25 @@ def index():
 
 @app.route("/auto-remediate", methods=["POST"])
 def auto_remediate():
-    import notifier
+    import notifier, subprocess
     with _lock:
         d = state.get("diagnosis")
     if d:
         notifier.notify_auto_remediate(d["diagnosis"], d["metrics"])
         with _lock:
             state["status"] = "REMEDIATING"
+        try:
+            subprocess.run([
+                "kubectl", "delete", "networkchaos", "--all",
+                "-n", "lsd-payments"
+            ], timeout=30, capture_output=True)
+            subprocess.run([
+                "kubectl", "delete", "httpchaos", "--all",
+                "-n", "lsd-payments"
+            ], timeout=30, capture_output=True)
+            log.info("Auto-remediation: chaos faults deleted")
+        except Exception as e:
+            log.error(f"Auto-remediation kubectl failed: {e}")
     return redirect("/")
 
 
