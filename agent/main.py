@@ -52,6 +52,8 @@ def run():
                 logger.info("Dashboard updated - http://localhost:5000")
             else:
                 logger.info("All metrics within thresholds")
+                if dashboard.state.get("status") == "ALERT":
+                    notifier.notify_recovery(telemetry.get("services", {}))
                 dashboard.clear_alert()
         except Exception as e:
             logger.error(f"Agent loop error: {e}", exc_info=True)

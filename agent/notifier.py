@@ -140,3 +140,25 @@ def notify_grafana_irm(diagnosis: dict, metrics: dict):
         log.info(f"Grafana IRM: {r.status_code}")
     except Exception as e:
         log.error(f"Grafana IRM error: {e}")
+
+
+def notify_recovery(metrics: dict):
+    """Fire recovery notification when all metrics return to normal."""
+    if not DISCORD_URL:
+        return
+    lines = [f"`{s}` error={m.get('error_rate','N/A'):.4f} p99={m.get('p99_ms','N/A')}ms" for s,m in metrics.items() if m.get('error_rate') is not None]
+    payload = {
+        "username": "NEXUS",
+        "embeds": [{
+            "title": ":white_check_mark: NEXUS RECOVERED - All Services Healthy",
+            "description": "All monitored services have returned to normal thresholds.",
+            "color": 0x10b981,
+            "fields": [{"name": "Telemetry", "value": "\n".join(lines) or "N/A"}],
+            "footer": {"text": "NEXUS - Mesh Intelligence Hub - Istio Service Mesh"}
+        }]
+    }
+    try:
+        r = requests.post(DISCORD_URL, json=payload, timeout=10)
+        log.info(f"Recovery Discord: {r.status_code}")
+    except Exception as e:
+        log.error(f"Recovery Discord error: {e}")
